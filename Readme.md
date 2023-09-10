@@ -101,5 +101,5 @@ curl -X POST -H "Content-Type: application/json" -d '{"product_id":"squashes", "
 to test the uploading of an image to a product (change the filename from pumpkin4 to something higher and dont forget to have that file created in you local directory, i.e. not leonhard)
 
 ```
-curl -X POST -F "file=@/home/leonhard/Projects/Hallein/minting-objects-game/backend/img/pumpkin4.jpg" -F "product_id=pumpkins" http://localhost:5000/upload
+curl -X POST -F "file=@/home/leonhard/Projects/Hallein/minting-objects-game/backend/img/pumpkin4.jpg" -F "product_id=pumpkins" http://localhost:5000/vision/uploadImageToProduct
 ```

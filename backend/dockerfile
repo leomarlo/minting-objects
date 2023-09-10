@@ -3,6 +3,7 @@ FROM ubuntu:latest
 
 ENV DEBIAN_FRONTEND=noninteractive
 
+
 # Update and upgrade the system packages
 RUN apt-get update && apt-get upgrade -y
 
@@ -16,6 +17,9 @@ RUN apt-get install -y libapache2-mod-wsgi-py3
 RUN mkdir -p /var/www/backend
 COPY . /var/www/backend
 COPY requirements.txt /tmp/requirements.txt
+
+
+ENV GOOGLE_CREDENTIAL_ONLY_PATH=/var/www/backend/env/
 
 # Install the Python requirements
 RUN python3 -m pip install -r /tmp/requirements.txt

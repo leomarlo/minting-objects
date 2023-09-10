@@ -1,2 +1,4 @@
 ALLOWED_UPLOAD_EXTENSIONS = {'png', 'jpg', 'jpeg', 'gif'}
 IMAGE_UPLOAD_FOLDER='uploads'
+IMAGE_UPLOAD_SIZE_LIMIT=20000000
+VISION_BUCKET_NAME="art-images-test"

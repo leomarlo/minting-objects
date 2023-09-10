@@ -3,7 +3,8 @@ from flask import Flask, request, jsonify
 from flask_cors import CORS
 from config.glob import (
     ALLOWED_UPLOAD_EXTENSIONS,
-    IMAGE_UPLOAD_FOLDER
+    IMAGE_UPLOAD_FOLDER,
+    VISION_BUCKET_NAME
 )
 from utils.path import (
     export_credential_path, 
@@ -17,43 +18,130 @@ from db.models import (
     Base, 
     User
 )
-from vision.query import list_product_sets
+from vision.query import (
+    list_product_sets, 
+    list_products_and_product_sets,
+    list_reference_images_for_product)
 from vision.addimage import create_reference_image
 from vision.createset import create_product_set
 from vision.manage import create_product, add_product_to_product_set, remove_product_from_product_set
-from vision.storage import upload_blob, delete_blob, allowed_file
+from vision.storage import upload_blob, delete_blob, allowed_file, upload_file
 
 
 # save global enviornment variable to the os
 load_env()
 export_credential_path()
+create_tables_if_with_db()
+create_upload_directory_if_not_there(folder=IMAGE_UPLOAD_FOLDER)
+# print('GOOGLE_CREDENTIAL_PATH', os.getenv("GOOGLE_CREDENTIAL_PATH"))
+
 
 # create the flask app
 app = Flask(__name__)
 # CORS(app, origins=["http://localhost:3000", "http://another.domain"])  # This will allow all origins to access your app. It's okay for development but not for production!
 
-create_tables_if_with_db()
-create_upload_directory_if_not_there(folder=IMAGE_UPLOAD_FOLDER)
 
 @app.route('/')
 def root():
     return jsonify(message="Hello from the Object Minting!")
 
-@app.route('/upload', methods=['POST'])
-def upload_file():
-    if 'file' not in request.files:
-        return jsonify({"error": "No file part"}), 400
-    file = request.files['file']
-    if file.filename == '':
-        return jsonify({"error": "No selected file"}), 400
-    if file and allowed_file(file.filename):
-        filename = os.path.join(IMAGE_UPLOAD_FOLDER, file.filename)
-        file.save(filename)
-        return jsonify({"message": "File uploaded successfully"}), 200
 
-    return jsonify({"error": "File type not allowed"}), 400
+@app.route('/upload', methods=['POST'])
+def upload_file_route():
+    result_dict, status = upload_file(
+        files=request.files, size=request.content_length)
+    return result_dict, status
 
 # @app.route('/vision/listProductSets', methods=['GET'])
+
+@app.route('/vision/listProductSets', methods=['GET'])
+def list_product_sets_route():
+    sets, status =  list_product_sets(os.getenv("GOOGLE_CLOUD_PROJECT"), os.getenv("GOOGLE_CLOUD_PROJECT_LOCATION"))
+    print('The sets are', sets)
+    return sets, status
+
+@app.route('/vision/listProducts', methods=['GET'])
+def list_products_route():
+    products, status =  list_products_and_product_sets(os.getenv("GOOGLE_CLOUD_PROJECT"), os.getenv("GOOGLE_CLOUD_PROJECT_LOCATION"))
+    print('The products are', products)
+    return products, status
+
+@app.route('/vision/reference_images/<product_id>', methods=['GET'])
+def list_reference_images_for_product_route(product_id):
+    images, status =  list_reference_images_for_product(
+        project_id=os.getenv("GOOGLE_CLOUD_PROJECT"), 
+        location=os.getenv("GOOGLE_CLOUD_PROJECT_LOCATION"),
+        product_id=product_id)
+    print('The images are', images)
+    return images, status
+
+
+@app.route('/vision/createProductSet', methods=['POST'])
+def create_product_set_route():
+    product_set_id = request.json['product_set_id']
+    product_set_display_name = request.json['product_set_display_name']
+    response_dict, status = create_product_set(os.getenv("GOOGLE_CLOUD_PROJECT"), os.getenv("GOOGLE_CLOUD_PROJECT_LOCATION"), product_set_id, product_set_display_name)
+    return response_dict, status
+
+@app.route('/vision/createProduct', methods=['POST'])
+def create_product_route():
+    product_id = request.json['product_id']
+    product_display_name = request.json['product_display_name']
+    product_category = 'general-v1'
+    response_dict, status = create_product(os.getenv("GOOGLE_CLOUD_PROJECT"), os.getenv("GOOGLE_CLOUD_PROJECT_LOCATION"), product_id, product_display_name, product_category)
+    return response_dict, status
+
+@app.route('/vision/addProductToProductSet', methods=['POST'])
+def add_product_to_product_set_route():
+    product_id = request.json['product_id']
+    product_set_id = request.json['product_set_id']
+    response_dict, status = add_product_to_product_set(os.getenv("GOOGLE_CLOUD_PROJECT"), os.getenv("GOOGLE_CLOUD_PROJECT_LOCATION"), product_id, product_set_id)
+    return response_dict, status
+
+@app.route('/vision/createProductAndAddToProductSet', methods=['POST'])
+def create_product_and_add_to_product_set_route():
+    product_id = request.json['product_id']
+    product_display_name = request.json['product_display_name']
+    product_category = 'general-v1'
+    product_set_id = request.json['product_set_id']
+    response_dict, status = create_product(os.getenv("GOOGLE_CLOUD_PROJECT"), os.getenv("GOOGLE_CLOUD_PROJECT_LOCATION"), product_id, product_display_name, product_category)
+    if status == 200:
+        response_dict, status = add_product_to_product_set(os.getenv("GOOGLE_CLOUD_PROJECT"), os.getenv("GOOGLE_CLOUD_PROJECT_LOCATION"), product_id, product_set_id)
+        return response_dict, status
+    else:
+        status = 500
+        return response_dict, status
+
+
+@app.route('/vision/removeProductFromProductSet', methods=['POST'])
+def remove_product_from_product_set_route():
+    product_id = request.json['product_id']
+    product_set_id = request.json['product_set_id']
+    response_dict, status = remove_product_from_product_set(os.getenv("GOOGLE_CLOUD_PROJECT"), os.getenv("GOOGLE_CLOUD_PROJECT_LOCATION"), product_id, product_set_id)
+    return response_dict, status
+
+
+@app.route('/vision/createReferenceImage', methods=['POST'])
+def create_reference_image_route():
+    product_id = request.json['product_id']
+    reference_image_id = request.json['reference_image_id']
+    gcs_uri = request.json['gcs_uri']
+    response_dict, status = create_reference_image(os.getenv("GOOGLE_CLOUD_PROJECT"), os.getenv("GOOGLE_CLOUD_PROJECT_LOCATION"), product_id, reference_image_id, gcs_uri)
+    return response_dict, status
+
+
+@app.route('/vision/uploadImageToProduct', methods=['POST'])
+def upload_image_to_product_route():
+    result_dict, status = upload_file(files=request.files, size=request.content_length)
+    if status == 200:
+        product_id = request.form['product_id']
+        blob_name = request.files['file'].filename
+        gcs_uri = f"gs://{VISION_BUCKET_NAME}/{blob_name}"
+        response_dict, status = create_reference_image(os.getenv("GOOGLE_CLOUD_PROJECT"), os.getenv("GOOGLE_CLOUD_PROJECT_LOCATION"), product_id, gcs_uri)
+        return response_dict, status
+    else:
+        status = 500
+        return result_dict, status
 
 
 @app.route('/createTables', methods=['GET'])

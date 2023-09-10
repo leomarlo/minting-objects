@@ -1,7 +1,9 @@
 import os
 
 def export_credential_path():
-    os.environ['GOOGLE_CREDENTIAL_PATH'] = os.path.join(os.path.dirname(__file__), 'env', os.getenv("GOOGLE_CREDENTIAL_FILE"))
+    if not os.getenv("GOOGLE_CREDENTIAL_FILE"):
+        raise Exception("GOOGLE_CREDENTIAL_FILE not found in environment variables")
+    os.environ['GOOGLE_CREDENTIAL_PATH'] = os.path.abspath(os.path.join(os.path.dirname(__file__), '..','env', os.getenv("GOOGLE_CREDENTIAL_FILE")))
 
 def current_environment():
     environment = os.getenv('FLASK_ENV')

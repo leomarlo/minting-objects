@@ -5,6 +5,7 @@
 docker-compose down
 
 export FLASK_ENV=
+export GOOGLE_CREDENTIAL_PATH=
 # then check if there is a process running on port 5000. If yes, kill it.
 
 # Get the PIDs of processes running on port 5000

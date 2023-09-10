@@ -1,5 +1,6 @@
 import os
 from google.cloud import storage
+from config.glob import ALLOWED_UPLOAD_EXTENSIONS
 my_password = os.getenv("Password")
 # os.environ['GOOGLE_APPLICATION_CREDENTIALS'] = os.getenv("GOOGLE_CREDENTIAL_PATH")
 
@@ -21,3 +22,6 @@ def delete_blob(bucket_name, blob_name):
 
     blob.delete()
     print("File {} deleted.".format(blob_name))
+
+def allowed_file(filename):
+    return '.' in filename and filename.rsplit('.', 1)[1].lower() in ALLOWED_UPLOAD_EXTENSIONS

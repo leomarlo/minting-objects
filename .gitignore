@@ -11,7 +11,7 @@ connect_via_ssh.sh
 # IDE-specific
 .atom/
 .idea/
-.vscode/
+# .vscode/
 
 # custom
 

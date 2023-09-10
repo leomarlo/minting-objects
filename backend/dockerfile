@@ -1,0 +1,33 @@
+# Use the Ubuntu image as a base
+FROM ubuntu:latest
+
+ENV DEBIAN_FRONTEND=noninteractive
+
+# Update and upgrade the system packages
+RUN apt-get update && apt-get upgrade -y
+
+# Install the required software
+RUN apt-get install -y python3 
+RUN apt-get install -y python3-pip
+RUN apt-get install -y apache2 
+RUN apt-get install -y libapache2-mod-wsgi-py3
+
+# Copy your backend and requirements
+RUN mkdir -p /var/www/backend
+COPY . /var/www/backend
+COPY requirements.txt /tmp/requirements.txt
+
+# Install the Python requirements
+RUN python3 -m pip install -r /tmp/requirements.txt
+
+# Configure the Apache server
+COPY backend.conf /etc/apache2/sites-available/backend.conf
+RUN a2ensite backend.conf && a2dissite 000-default.conf
+RUN echo "ServerName localhost" >> /etc/apache2/apache2.conf
+
+# Expose ports
+EXPOSE 80
+EXPOSE 443
+
+# Run Apache in the foreground
+CMD ["apachectl", "-D", "FOREGROUND"]

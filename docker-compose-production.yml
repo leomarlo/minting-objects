@@ -1,0 +1,61 @@
+version: '3.7'
+
+services:
+  backend:
+    container_name: backend
+    build:
+      context: ./backend
+      dockerfile: dockerfile
+    ports:
+      - "5000:80"
+    environment:
+      - FLASK_ENV=production
+    env_file:
+      - .env
+    depends_on:
+      - database
+
+  frontend:
+    container_name: frontend
+    build:
+      context: ./frontend
+      dockerfile: dockerfile
+      args:
+        - REACT_APP_DEVELOPMENT_MODE=production
+        - REACT_APP_DOCKERIZED=dockerized
+    # environment:
+    #   - REACT_APP_DEVELOPMENT_MODE=development
+    #   - REACT_APP_DOCKERIZED=dockerized
+    # volumes:
+    #   - ./frontend/dist:/usr/local/apache2/htdocs/
+    ports:
+      - "80:80"
+    depends_on:
+      - backend
+      - database
+  
+  database:
+    image: postgres:13
+    container_name: db
+    ports:
+      - "5432:5432"
+    env_file:
+    - .env
+    volumes:
+      - pgdata2:/var/lib/postgresql/data
+      # - ./path/to/your/sqldump:/docker-entrypoint-initdb.d/dump.sql
+
+  pgadmin:
+    image: dpage/pgadmin4
+    container_name: client
+    ports:
+      - "8881:80"
+    env_file:
+    - .env
+    depends_on:
+      - database
+
+# volumes:
+#   postgres-data:
+volumes:
+  pgdata2:

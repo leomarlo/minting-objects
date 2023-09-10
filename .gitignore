@@ -1,0 +1,59 @@
+# Common
+*.log
+*.log.*
+*.swp
+*.swo
+.DS_Store
+Thumbs.db
+*.pem
+connect_via_ssh.sh
+
+# IDE-specific
+.atom/
+.idea/
+.vscode/
+
+# custom
+
+*__deprecated__*
+docker-copies
+
+# Frontend (React & Node)
+/frontend/node_modules/
+/frontend/.next/
+/frontend/.cache/
+/frontend/build/
+/frontend/out/
+/frontend/dist/
+/frontend/public/assets/
+
+# Yarn Debug
+.yarn-debug.log*
+.yarn-error.log*
+
+# Frontend misc
+/frontend/.env
+/frontend/.env.local
+/frontend/.env.development
+/frontend/.env.production
+
+# Backend (Python & Flask)
+/backend/__pycache__/
+/backend/*.pyc
+/backend/*.pyo
+/backend/db.sqlite3
+/backend/*.egg-info/
+/backend/dist/
+/backend/build/
+/backend/.venv/
+*__pycache__*
+
+# Backend misc
+/backend/.env
+/backend/env/
+/backend/.flaskenv
+/backend/instance/
+
+
+# global
+.env

@@ -1,0 +1,92 @@
+# Use the official image as a parent image
+FROM httpd:2.4
+
+# Set the maintainer label
+LABEL maintainer="your-email@example.com"
+
+ENV DEBIAN_FRONTEND=noninteractive
+
+ARG REACT_APP_DEVELOPMENT_MODE
+ARG REACT_APP_DOCKERIZED
+
+# Then, set them as environment variables so they are available during the build
+ENV REACT_APP_DEVELOPMENT_MODE=$REACT_APP_DEVELOPMENT_MODE
+ENV REACT_APP_DOCKERIZED=$REACT_APP_DOCKERIZED
+# Set the working directory
+WORKDIR /website
+RUN mkdir src
+
+
+# replace shell with bash so we can source files
+# RUN rm /bin/sh && ln -s /bin/bash /bin/sh
+
+# Install necessary utilities and yarn
+RUN apt-get update
+RUN apt-get install -y curl 
+RUN apt-get install -y gnupg 
+RUN apt-get install -y apt-transport-https
+RUN apt-get install -y apt-utils wget unzip
+
+RUN apt-get -y autoclean
+# RUN curl -sS https://dl.yarnpkg.com/debian/pubkey.gpg | apt-key add - 
+# RUN echo "deb https://dl.yarnpkg.com/debian/ stable main" | tee /etc/apt/sources.list.d/yarn.list 
+RUN apt-get update
+# RUN curl -sL https://deb.nodesource.com/setup | bash - 
+# RUN apt-get install -yq nodejs
+RUN curl -sL https://deb.nodesource.com/setup_18.x | bash - && \ 
+    apt-get install -y nodejs
+# RUN apt-get install -y npm 
+RUN npm install -g yarn 
+# RUN apt-get install -y npm 
+# fix npm - not the latest version installed by apt-get
+# RUN npm install -g npm
+# RUN npm install -g yarn
+RUN apt-get clean 
+RUN rm -rf /var/lib/apt/lists/*
+
+
+# RUN echo /etc/os-release
+
+# copy src to src
+COPY utils/ utils/
+COPY pages/ pages/
+# copy package.json to website
+COPY package.json .
+
+# copy tsconfig.json to website
+COPY tsconfig.json .
+
+# copy all webpack files to website
+COPY next.config.js .
+COPY next-env.d.ts .
+
+# copy yarn.lock to website
+COPY yarn.lock .
+
+# run yarn install
+RUN yarn install
+
+# run yarn build:prod if DEVELOPMENT_MODE is set to production, otherwise run yarn build:dev
+# RUN if [ "$REACT_APP_DEVELOPMENT_MODE" = "production" ] ; then yarn build:next:dev ; else yarn build:next:dev ; fi 
+RUN yarn build:next:dev
+RUN yarn next:export
+# RUN yarn build:dev
+
+# Copy the frontend's dist folder to Apache's htdocs
+# RUN cp -r dist/* /usr/local/apache2/htdocs/
+
+# RUN cp /usr/local/apache2/htdocs/index.html /usr/local/apache2/htdocs/index-2.html
+# COPY dummyindex.html /usr/local/apache2/htdocs/index.html
+
+# Copy the custom Apache config
+COPY frontend.conf /usr/local/apache2/conf/httpd.conf
+
+# RUN cp /usr/local/apache2/htdocs/index-2.html /usr/local/apache2/htdocs/index.html
+# RUN cp -r dist/* /usr/local/apache2/htdocs/
+
+RUN cp -r out/* /usr/local/apache2/htdocs/
+RUN cp /usr/local/apache2/htdocs/App.html /usr/local/apache2/htdocs/index.html
+
+
+# Explicitly specify the command to run Apache in the foreground
+CMD ["httpd-foreground"]

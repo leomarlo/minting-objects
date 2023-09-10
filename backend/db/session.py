@@ -1,5 +1,5 @@
 import os 
-from env.path import current_environment, load_env
+from utils.path import current_environment, load_env
 from sqlalchemy import create_engine
 from sqlalchemy.orm import sessionmaker
 from dotenv import load_dotenv

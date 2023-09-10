@@ -1,7 +1,7 @@
 import os
 from flask import Flask, jsonify
 from flask_cors import CORS
-from env.path import export_credential_path, load_env, create_tables_if_with_db
+from utils.path import export_credential_path, load_env, create_tables_if_with_db
 from db.session import engine, SessionLocal
 from db.mock import mockdb
 from db.models import (

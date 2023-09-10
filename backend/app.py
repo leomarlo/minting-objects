@@ -25,7 +25,10 @@ from vision.query import (
 from vision.addimage import create_reference_image
 from vision.createset import create_product_set
 from vision.manage import create_product, add_product_to_product_set, remove_product_from_product_set
-from vision.storage import upload_blob, delete_blob, allowed_file, upload_file
+from vision.storage import upload_file
+from vision.similarity import search_products
+
+
 
 
 # save global enviornment variable to the os
@@ -60,10 +63,31 @@ def list_product_sets_route():
     print('The sets are', sets)
     return sets, status
 
+
+@app.route('/vision/searchProductsFromFileName/<filename>/<product_set_id>', methods=['GET'])
+def search_products_route(filename, product_set_id):
+    # Example usage
+    image_path = os.path.abspath(os.path.join(os.path.dirname(__file__),'img', filename))
+
+    matched_products, status = search_products(
+        project_id=os.getenv("GOOGLE_CLOUD_PROJECT"), 
+        location=os.getenv("GOOGLE_CLOUD_PROJECT_LOCATION"),
+        product_set_id=product_set_id, 
+        product_category="general-v1", 
+        image_path=image_path)
+    
+    # for result in matched_products:
+    #     print(f"Matched product: {result["product_name"]}, score: {result.score}")
+    print('matched products', matched_products)
+    
+    return jsonify([{"name":prod["product_name"], "score": prod["score"]} for prod in matched_products]), status
+
+
 @app.route('/vision/listProducts', methods=['GET'])
 def list_products_route():
     products, status =  list_products_and_product_sets(os.getenv("GOOGLE_CLOUD_PROJECT"), os.getenv("GOOGLE_CLOUD_PROJECT_LOCATION"))
     print('The products are', products)
+    print('We would like to return the products here')
     return products, status
 
 @app.route('/vision/reference_images/<product_id>', methods=['GET'])
@@ -128,6 +152,22 @@ def create_reference_image_route():
     gcs_uri = request.json['gcs_uri']
     response_dict, status = create_reference_image(os.getenv("GOOGLE_CLOUD_PROJECT"), os.getenv("GOOGLE_CLOUD_PROJECT_LOCATION"), product_id, reference_image_id, gcs_uri)
     return response_dict, status
+
+@app.route('/vision/uploadImageAndSearchSimilarProducts', methods=['POST'])
+def upload_image_and_search_similar_products_route():
+    result_dict, status = upload_file(files=request.files, size=request.content_length)
+    if status == 200:
+        image_path = os.path.abspath(os.path.join(os.path.dirname(__file__),'img', request.files['file'].filename))
+        matched_products, status = search_products(
+            project_id=os.getenv("GOOGLE_CLOUD_PROJECT"), 
+            location=os.getenv("GOOGLE_CLOUD_PROJECT_LOCATION"),
+            product_set_id=request.form['product_set_id'], 
+            product_category="general-v1", 
+            image_path=image_path)
+        return jsonify([{"name":prod["product_name"], "score": prod["score"]} for prod in matched_products]), status
+    else:
+        status = 500
+        return result_dict, status
 
 
 @app.route('/vision/uploadImageToProduct', methods=['POST'])

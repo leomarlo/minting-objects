@@ -19,9 +19,9 @@ def list_product_sets(project_id, location):
     try:
         product_sets = client.list_product_sets(parent=location_path)
         return_list = [{
-            'Product set name:': product_set.name,
-            'Product set id:' : product_set.name.split('/')[-1],
-            'Product set display name:' : product_set.display_name,
+            'Set_name:': product_set.name,
+            'Set_id:' : product_set.name.split('/')[-1],
+            'Set_display_name:' : product_set.display_name,
             } for product_set in product_sets]
         
     except Exception as e:
@@ -62,7 +62,8 @@ def list_products_and_product_sets(project_id, location):
                 )
                 
                 reference_images = client.list_reference_images(parent=product_path)
-                reference_images_count = len([image for image in reference_images])
+                image_infos = [{"name": image.name, "uri": image.uri} for image in reference_images]
+                reference_images_count = len(image_infos)
 
     
                 product_dicts.append({
@@ -70,7 +71,8 @@ def list_products_and_product_sets(project_id, location):
                     'Product id:' : product_id,
                     'Product display name:' : product.display_name,
                     'Product category:' : product.product_category,
-                    'Number of reference images' : reference_images_count
+                    'Number of reference images' : reference_images_count,
+                    'Reference images' : image_infos
                 })
 
 

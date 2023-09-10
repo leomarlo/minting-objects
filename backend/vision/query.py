@@ -64,6 +64,7 @@ def list_products_and_product_sets(project_id, location):
                 reference_images = client.list_reference_images(parent=product_path)
                 reference_images_count = len([image for image in reference_images])
 
+    
                 product_dicts.append({
                     'Product name:': product.name,
                     'Product id:' : product_id,

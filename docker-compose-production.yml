@@ -15,6 +15,20 @@ services:
       - .env
     depends_on:
       - database
+      - ipfs
+
+
+  ipfs:
+    image: ipfs/go-ipfs:v0.22.0
+    container_name: ipfs_service
+    ports:
+      - "4001:4001"  # swarm
+      - "5001:5001"  # API
+      - "8080:8080"  # Gateway
+    volumes:
+      - ipfs_data:/data/ipfs
+      - ipfs_staging:/export
+
 
   frontend:
     container_name: frontend
@@ -56,7 +70,7 @@ services:
     depends_on:
       - database
 
-# volumes:
-#   postgres-data:
 volumes:
   pgdata2:
+  ipfs_data:
+  ipfs_staging:

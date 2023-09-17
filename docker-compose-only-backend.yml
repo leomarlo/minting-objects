@@ -12,6 +12,19 @@ services:
       - FLASK_ENV=development
     depends_on:
       - database
+      - ipfs
+  
+
+  ipfs:
+    image: ipfs/go-ipfs:v0.22.0
+    container_name: ipfs_service
+    ports:
+      - "4001:4001"  # swarm
+      - "5001:5001"  # API
+      - "8080:8080"  # Gateway
+    volumes:
+      - ipfs_data:/data/ipfs
+      - ipfs_staging:/export
 
   
   database:
@@ -21,3 +34,8 @@ services:
       - "5432:5432"
     env_file:
     - .env
+
+  
+volumes:
+  ipfs_data:
+  ipfs_staging:

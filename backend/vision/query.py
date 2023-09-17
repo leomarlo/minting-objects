@@ -32,6 +32,49 @@ def list_product_sets(project_id, location):
     return return_list, return_status
 
 
+def list_products_in_product_set(project_id, location, product_set_id):
+    """ list products in given product set
+    """
+    client = __get_vision_client()
+
+    return_status = 200
+    try:  
+        product_set_path = client.product_set_path(project_id, location, product_set_id)
+        products = client.list_products_in_product_set(name=product_set_path)
+            
+        print('we got some product path', product_set_path)
+        print('we got some products', [p.name for p in products])
+        products_list = []
+
+        for product in products:
+
+            product_id = product.name.split('/')[-1]
+            # product_path = client.product_path(
+            #         project=project_id, location=location, product=product_id
+            #     )
+            # reference_images = client.list_reference_images(parent=product_path)
+            # image_infos = [{"name": image.name, "uri": image.uri} for image in reference_images]
+            # reference_images_count = len(image_infos)
+
+
+            products_list.append({
+                'name': product.name,
+                'id' : product_id,
+                'displayname' : product.display_name,
+                'category' : product.product_category
+                # 'Reference images' : image_infos
+            })
+        # print('product List is', products_list)
+    except Exception as e:
+        
+        # print the error to string
+        print('Error: ', str(e))
+        return_status = 500
+    
+    return products_list, return_status
+
+
+
 def list_products_and_product_sets(project_id, location):
     """List all product sets.
     Args:
@@ -67,20 +110,20 @@ def list_products_and_product_sets(project_id, location):
 
     
                 product_dicts.append({
-                    'Product name:': product.name,
-                    'Product id:' : product_id,
-                    'Product display name:' : product.display_name,
-                    'Product category:' : product.product_category,
-                    'Number of reference images' : reference_images_count,
-                    'Reference images' : image_infos
+                    'name': product.name,
+                    'id' : product_id,
+                    'name' : product.display_name,
+                    'category' : product.product_category,
+                    'nrimages' : reference_images_count,
+                    'images' : image_infos
                 })
 
 
             return_list.append({
-                'Product set name:': product_set.name,
-                'Product set id:' : product_set.name.split('/')[-1],
-                'Product set display name:' : product_set.display_name,
-                'Products': product_dicts 
+                'name': product_set.name,
+                'id' : product_set.name.split('/')[-1],
+                'displayname' : product_set.display_name,
+                'products': product_dicts 
                 })
         
     except Exception as e:

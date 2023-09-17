@@ -4,17 +4,25 @@ from flask import jsonify
 from config.glob import (
     ALLOWED_UPLOAD_EXTENSIONS,
     IMAGE_UPLOAD_FOLDER,
+    IMAGE_THUMB_FOLDER,
     IMAGE_UPLOAD_SIZE_LIMIT,
     VISION_BUCKET_NAME
 )
+from vision.compression import compress_image
 # from utils.path import export_credential_path
 
 
 def upload_blob(bucket_name, source_file_name, destination_blob_name):
     """Uploads a file to the bucket."""
+    print('inside upload blob')
     storage_client = __get_storage_client()
+    print('storage client')
     bucket = storage_client.bucket(bucket_name)
+    print('bucket', bucket)
+    print('destination_blob_name', destination_blob_name)
+    print('source_file_name', source_file_name)
     blob = bucket.blob(destination_blob_name)
+    print('blob', blob)
     blob.upload_from_filename(source_file_name)
     print("File {} uploaded to {}.".format(source_file_name, destination_blob_name))
     
@@ -32,7 +40,7 @@ def allowed_file(filename):
     return '.' in filename and filename.rsplit('.', 1)[1].lower() in ALLOWED_UPLOAD_EXTENSIONS
 
 
-def upload_file(files, size):
+def upload_file(files, size, with_thumbnail=True):
     """Uploads a file to the bucket."""
     
     if 'file' not in files:
@@ -50,6 +58,7 @@ def upload_file(files, size):
     # source_file_name = os.path.join(os.path.dirname(__file__), 'img', 'SocksOrNot.jpg')
     filename = os.path.join(IMAGE_UPLOAD_FOLDER, file.filename)
     file.save(filename)
+    
     print(f'File name: {filename}')
 
     allowed_flag = allowed_file(file.filename)
@@ -57,6 +66,10 @@ def upload_file(files, size):
     if not allowed_flag:
         return jsonify({"error": "File type not allowed"}), 400
     
+    # save to thumbnails
+    if with_thumbnail:
+      thumbnail = os.path.join(IMAGE_THUMB_FOLDER, 'thumb_' + file.filename)
+      compress_image(filename, thumbnail)
     # Upload directly to GCS
     destination_blob_name = file.filename  # or any other name you want to give
 
@@ -75,6 +88,9 @@ def upload_file(files, size):
     os.remove(filename)
 
     if success_flag:
+        print('uploaded successfully')
         return jsonify({"message": "File uploaded successfully"}), 200
     else:
+        
+        print('didnt upload successfully')
         return jsonify({"error": error_message}), 500

@@ -26,6 +26,7 @@ def search_products(
     with open(image_path, "rb") as image_file:
         content = image_file.read()
 
+    print('we are inside search')
     # Create annotate image request along with product search feature.
     image = gvision.Image(content=content)
 
@@ -40,12 +41,13 @@ def search_products(
     )
     image_context = gvision.ImageContext(product_search_params=product_search_params)
 
+    print('we are now searching')
     # Search products similar to the image.
     max_results = 5 ## TODO: make this a parameter
     response = image_annotator_client.product_search(
         image, image_context=image_context, max_results=max_results
     )
-
+    print('we searched')
     index_time = response.product_search_results.index_time
     print("Product set index time: ")
     print(index_time)

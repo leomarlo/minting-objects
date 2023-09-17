@@ -13,7 +13,7 @@ from utils.path import (
     load_env, 
     create_tables_if_with_db,
     create_directory_if_not_there)
-from utils.products import __get_main_product_set_id
+from utils.products import __get_main_product_set_ids
 from db.utils import create_tables
 from db.session import engine, SessionLocal
 from db.mock import mockdb
@@ -154,7 +154,8 @@ def list_products_route():
 
 @app.route('/vision/listProductsInProductSet', methods=['GET'])
 def list_products_in_set_route():
-    products, status =  list_products_in_product_set(os.getenv("GOOGLE_CLOUD_PROJECT"), os.getenv("GOOGLE_CLOUD_PROJECT_LOCATION"), __get_main_product_set_id())
+    product_set_id = __get_main_product_set_ids()[0]
+    products, status =  list_products_in_product_set(os.getenv("GOOGLE_CLOUD_PROJECT"), os.getenv("GOOGLE_CLOUD_PROJECT_LOCATION"), product_set_id)
     return products, status
 
 

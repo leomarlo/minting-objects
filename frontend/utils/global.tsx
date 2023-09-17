@@ -7,6 +7,9 @@ const BACKEND_URL = REVERSE_PROXY ? '/api/' : 'http://localhost:5000/';
 
 const MIN_UPLOADS_PER_OBJECT = DEVELOPMENT_MODE=='local' ? 1 : 6;
 
+console.log('DEVELOPMENT_MODE', DEVELOPMENT_MODE)
+console.log('process.env.REACT_APP_DEVELOPMENT_MODE ', process.env.REACT_APP_DEVELOPMENT_MODE )
+
 const MAIN_PRODUCT_ID = 'schmiede'
 const TEST_PRODUCT_ID = 'veggies'
 const DEV_PRODUCT_ID = 'socks'

@@ -19,8 +19,13 @@ from db.session import engine, SessionLocal
 from db.mock import mockdb
 from db.models import (
     Base, 
-    User
+    User,
+    Image,
 )
+from db.utils import (
+    db_create_image_entry, 
+    db_fetch_image_from_filename, 
+    db_close_session)
 from vision.query import (
     list_product_sets, 
     list_products_and_product_sets,
@@ -33,6 +38,8 @@ from vision.storage import upload_file, allowed_file
 from vision.similarity import search_products
 from vision.compression import compress_image
 from vision.ipfs import upload_image_to_ipfs
+
+from blockchain.minting import mint_token
 
 
 
@@ -69,7 +76,7 @@ def root():
 @app.route(routes["UPLOAD"]["path"], methods=['POST'])
 def upload_file_route():
     result_dict, status = upload_file(
-        files=request.files, size=request.content_length)
+        files=request.files, size=request.content_length, session=SessionLocal())
     return result_dict, status
 
 
@@ -216,7 +223,8 @@ def create_reference_image_route():
 
 @app.route('/vision/uploadImageAndSearchSimilarProducts', methods=['POST'])
 def upload_image_and_search_similar_products_route():
-    result_dict, status = upload_file(files=request.files, size=request.content_length)
+    result_dict, status = upload_file(files=request.files, size=request.content_length,
+    session=SessionLocal())
     print('uploaded image.', status)
     if status == 200:
         print('trying to find matching products')
@@ -244,7 +252,7 @@ def upload_image_and_search_similar_products_route():
 
 @app.route('/vision/uploadImageToProduct', methods=['POST'])
 def upload_image_to_product_route():
-    result_dict, status = upload_file(files=request.files, size=request.content_length)
+    result_dict, status = upload_file(files=request.files, size=request.content_length, session=SessionLocal())
     if status == 200:
         product_id = request.form['product_id']
         blob_name = request.files['file'].filename
@@ -276,17 +284,29 @@ def create_product_and_ref_images():
     response_dicts.update({"add_product_to_product_set":response_dict})
     ## add reference images
     create_ref_images_response = []
-    blob_names = request.json['files']  
+    blob_names = request.json['files']
+    main_cid = ""
     for blob_name in blob_names:
         gcs_uri = f"gs://{VISION_BUCKET_NAME}/{blob_name}"
+        
         response_dict, status = create_reference_image(os.getenv("GOOGLE_CLOUD_PROJECT"), os.getenv("GOOGLE_CLOUD_PROJECT_LOCATION"), product_id, gcs_uri)
-        create_ref_images_response.append(response_dict)
+        
+
+        # mint the token
+        db_image_data = db_fetch_image_from_filename(session=SessionLocal(), filename=blob_name)
+        main_cid = db_image_data["cid"]
+        tx, address = mint_token(address=None, cid=main_cid, product_id=product_id)
+
+
+        create_ref_images_response.append({"gc_ref":response_dict, "cid":main_cid})
+
     response_dicts.update({"create_reference_images":create_ref_images_response})
     return response_dicts, status
 
 @app.route('/vision/uploadToIPFS', methods=['GET'])
 def upload_to_ipfs_route():
-    return upload_image_to_ipfs('img/carrot2.jpg')
+    resp, status = upload_image_to_ipfs('img/carrot2.jpg')
+    return jsonify(resp), status
 
 
 @app.route('/createTables', methods=['GET'])

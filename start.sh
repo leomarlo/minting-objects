@@ -11,6 +11,7 @@ if [ "$1" == "--local" ]; then
     source .env
     cd backend
     export FLASK_ENV=local
+    export REACT_APP_DEVELOPMENT_MODE=local
     # Combine the path with the file
     export GOOGLE_CREDENTIAL_PATH="/home/leonhard/Projects/Hallein/minting-objects-game/backend/env/$GOOGLE_CREDENTIAL_FILE"
     echo $GOOGLE_CREDENTIAL_PATH

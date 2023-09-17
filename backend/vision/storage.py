@@ -9,6 +9,12 @@ from config.glob import (
     VISION_BUCKET_NAME
 )
 from vision.compression import compress_image
+from vision.ipfs import upload_image_to_ipfs
+from db.utils import (
+    db_create_image_entry, 
+    db_fetch_image_from_filename, 
+    db_close_session)
+
 # from utils.path import export_credential_path
 
 
@@ -40,7 +46,7 @@ def allowed_file(filename):
     return '.' in filename and filename.rsplit('.', 1)[1].lower() in ALLOWED_UPLOAD_EXTENSIONS
 
 
-def upload_file(files, size, with_thumbnail=True):
+def upload_file(files, size, session, with_thumbnail=True, to_ipfs=True):
     """Uploads a file to the bucket."""
     
     if 'file' not in files:
@@ -70,6 +76,15 @@ def upload_file(files, size, with_thumbnail=True):
     if with_thumbnail:
       thumbnail = os.path.join(IMAGE_THUMB_FOLDER, 'thumb_' + file.filename)
       compress_image(filename, thumbnail)
+
+    overall_result = {"gcs_result": "", "ipfs_result": ""}
+    ipfs_result = {"gateway_url": "", "cid": ""}
+    ipfs_status = 500
+    if to_ipfs:
+        # upload to ipfs
+        ipfs_result, ipfs_status = upload_image_to_ipfs(filename)
+       
+    overall_result["ipfs_result"] = ipfs_result
     # Upload directly to GCS
     destination_blob_name = file.filename  # or any other name you want to give
 
@@ -89,8 +104,13 @@ def upload_file(files, size, with_thumbnail=True):
 
     if success_flag:
         print('uploaded successfully')
-        return jsonify({"message": "File uploaded successfully"}), 200
+        overall_result["gcs_result"] = {"message": "File uploaded successfully"}
+        if ipfs_status:
+            db_create_image_entry(session, file.filename, ipfs_result['cid'], f"gs://{VISION_BUCKET_NAME}/{destination_blob_name}")
+            db_close_session(session)
+        return jsonify(overall_result), 200
     else:
         
         print('didnt upload successfully')
-        return jsonify({"error": error_message}), 500
+        overall_result["gcs_result"] = {"message": error_message}
+        return jsonify(overall_result), 500

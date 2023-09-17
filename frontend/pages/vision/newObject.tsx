@@ -37,7 +37,7 @@ function ObjectCreation() {
   useEffect(() => {
 
     const aboveThreshold = tableData.some(item => item.score > SIMILARITY_THRESHOLD);
-    setUpLoadDisabled(aboveThreshold || tableData.length==0);
+    setUpLoadDisabled(aboveThreshold);
   }, [tableData]);
 
 
@@ -116,6 +116,8 @@ function ObjectCreation() {
       console.log(data)
       setSubmitInfo('You submitted successfully')
       setValidFiles([])
+      // alert with jsonized data 
+      alert(JSON.stringify(data))
     })
     .catch(error => {
       // Handle the error

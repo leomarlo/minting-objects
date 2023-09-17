@@ -19,8 +19,8 @@ def upload_image_to_ipfs(image_path):
 
         gateway_url = f"http://{ipfs_service_name}:8080/ipfs/{cid}"
         print('gateway url',gateway_url)
-        return jsonify({'gateway_url':gateway_url, 'cid':cid}), 200
+        return {'gateway_url':gateway_url, 'cid':cid}, 200
     except subprocess.CalledProcessError as e:
         errormessage = f"Error uploading to IPFS: {e}"
         log(errormessage)
-        return jsonify({"message": errormessage}), 500
+        return {"message": errormessage}, 500

@@ -50,8 +50,10 @@ RUN rm -rf /var/lib/apt/lists/*
 # copy src to src
 COPY utils/ utils/
 COPY pages/ pages/
+COPY components/ components/
 # copy package.json to website
 COPY package.json .
+
 
 # copy tsconfig.json to website
 COPY tsconfig.json .

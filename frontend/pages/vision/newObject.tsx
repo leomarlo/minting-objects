@@ -2,7 +2,7 @@ import React, { useState, useEffect, useRef } from 'react';
 import axios from 'axios';
 import { BACKEND_URL } from '../../utils/global';
 import { SIMILARITY_THRESHOLD } from '../../utils/constants';
-import { MIN_UPLOADS_PER_OBJECT, PRODUCT_ID } from '../../utils/global'
+import { MIN_UPLOADS_PER_OBJECT, PRODUCT_IDS } from '../../utils/global'
 import getLastWordOfPath from '../../utils/parsing';
 import LoadingSpinner from "../../components/LoadingSpinner"
 // import TablePrimitive  from "../../components/table"
@@ -23,6 +23,7 @@ function ObjectCreation() {
   const [upLoadDisabled, setUpLoadDisabled] = useState(true)
   const [disableSubmit, setDisableSubmit] = useState(true)
   const [validFiles, setValidFiles] = useState<Array<string>>([])
+  const [selectedObjectSet, setSelectedObjectSet] = useState('');
 
   const fileInputRef = useRef<HTMLInputElement | null>(null);
 
@@ -33,12 +34,16 @@ function ObjectCreation() {
       }
   };
 
+  const handleSelectChange = (event: any) => {
+    setSelectedObjectSet(event.target.value);
+  };
+
 
   useEffect(() => {
 
     const aboveThreshold = tableData.some(item => item.score > SIMILARITY_THRESHOLD);
-    setUpLoadDisabled(aboveThreshold);
-  }, [tableData]);
+    setUpLoadDisabled(aboveThreshold || selectedFile===null);
+  }, [tableData, selectedFile]);
 
 
   useEffect(() => {
@@ -70,7 +75,7 @@ function ObjectCreation() {
     const formData = new FormData();
     if (selectedFile){
       formData.append('file', selectedFile);
-      formData.append('product_set_id', PRODUCT_ID);  // Add other required key-values
+      formData.append('product_set_id', selectedObjectSet);  // Add other required key-values
     }
       
 
@@ -110,7 +115,7 @@ function ObjectCreation() {
     setIsMinting(true)
     console.log('the submitted files are', validFiles)
 
-    createObjectWithReferenceImages(validFiles, PRODUCT_ID, objectDisplayName, objectName)
+    createObjectWithReferenceImages(validFiles, selectedObjectSet, objectDisplayName, objectName)
     .then(data => {
       // Do something with the data
       console.log(data)
@@ -137,11 +142,18 @@ function ObjectCreation() {
         <div className="col-2"></div>
         <div className="col-8">
           <div className="mt-4">
-            <h2>Create New Object</h2>
+            <h2>Mint new Object</h2>
             <hr />
-            <select>
+            <select 
+              className="form-control" 
+              value={selectedObjectSet} 
+              onChange={handleSelectChange}
+              style={{
+                backgroundColor: '#e4ea90',
+                borderWidth: '2px'
+              }}>
               {objectSets.map((set: any) =>
-                <option key={set} value={set} disabled={set !== PRODUCT_ID}>
+                <option key={set} value={set} disabled={!PRODUCT_IDS.includes(set)}>
                   {set}
                 </option>
               )}
@@ -194,7 +206,7 @@ function ObjectCreation() {
               })}
               </tbody>
             </table>}
-            <button className='btn btn-success mb-4' onClick={handleAddObject} disabled={upLoadDisabled}>Add</button>
+            <button className='btn btn-success mb-4 w-100' onClick={handleAddObject} disabled={upLoadDisabled}>Add</button>
             <table className="table table-dark">
               <thead>
                 <tr>
@@ -215,8 +227,15 @@ function ObjectCreation() {
             </table>
 
             <hr />
-            <input className="mx-2" placeholder="Object Name" value={objectName} onChange={(e) => setObjectName(e.target.value)} />
-            <input className="mx-2" placeholder="Object Display Name" value={objectDisplayName} onChange={(e) => setObjectDisplayName(e.target.value)} />
+            <h4>Object Information</h4>
+            <div className="row mt-3">
+              <div className="col-6">
+                <input className="mx-2 my-2 w-100" placeholder="Object Name" value={objectName} onChange={(e) => setObjectName(e.target.value)} />
+              </div>
+              <div className="col-6">
+                <input className="mx-2 my-2 w-100" placeholder="Object Display Name" value={objectDisplayName} onChange={(e) => setObjectDisplayName(e.target.value)} />
+              </div>
+            </div>
             <hr />
             {submitInfo}
             <br />

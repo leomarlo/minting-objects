@@ -3,7 +3,6 @@ FROM ubuntu:latest
 
 ENV DEBIAN_FRONTEND=noninteractive
 
-
 # Update and upgrade the system packages
 RUN apt-get update && apt-get upgrade -y
 
@@ -12,22 +11,40 @@ RUN apt-get install -y python3
 RUN apt-get install -y python3-pip
 RUN apt-get install -y apache2 
 RUN apt-get install -y libapache2-mod-wsgi-py3
+RUN apt-get install -y curl  # Needed for the next step
+
+# Install Node.js and npm
+RUN curl -sL https://deb.nodesource.com/setup_18.x | bash -
+RUN apt-get install -y nodejs
 
 # Copy your backend and requirements
 RUN mkdir -p /var/www/backend
 COPY . /var/www/backend
 COPY requirements.txt /tmp/requirements.txt
 
-
 ENV GOOGLE_CREDENTIAL_ONLY_PATH=/var/www/backend/env/
 
 # Install the Python requirements
 RUN python3 -m pip install -r /tmp/requirements.txt
 
+# Install the node requirements
+WORKDIR /var/www/backend
+RUN npm install
+
 # Configure the Apache server
 COPY backend.conf /etc/apache2/sites-available/backend.conf
 RUN a2ensite backend.conf && a2dissite 000-default.conf
 RUN echo "ServerName localhost" >> /etc/apache2/apache2.conf
+
+# Change directory ownership to www-data and set appropriate permissions
+RUN mkdir -p /var/www/backend/uploads
+RUN mkdir -p /var/www/backend/thumbs
+RUN chown www-data:www-data /var/www/backend
+RUN chmod 755 /var/www/backend
+RUN chown -R www-data:www-data /var/www/backend/uploads
+RUN chmod -R 755 /var/www/backend/uploads
+RUN chown -R www-data:www-data /var/www/backend/thumbs
+RUN chmod -R 755 /var/www/backend/thumbs
 
 # Expose ports
 EXPOSE 80

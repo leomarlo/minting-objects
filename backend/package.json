@@ -1,0 +1,11 @@
+{
+  "name": "blockchain",
+  "version": "0.0.1",
+  "description": "auxiliary library",
+  "type": "module",
+  "main": "index.js",
+  "license": "MIT",
+  "dependencies": {
+    "ipfs-core": "^0.18.1"
+  }
+}

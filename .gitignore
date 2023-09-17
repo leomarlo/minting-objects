@@ -45,6 +45,7 @@ docker-copies
 /backend/*.egg-info/
 /backend/dist/
 /backend/build/
+/backend/img/
 /backend/.venv/
 /backend/test.py
 *__pycache__*

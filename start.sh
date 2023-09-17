@@ -30,10 +30,10 @@ elif [ "$1" == "--development" ]; then
     ## if the second argument is --build then echo hello, else say hi
     if [ "$2" == "--build" ]; then
         echo "--> Starting development environment with build"
-        docker-compose up --build -d
+        docker-compose up --build
     else
         echo "--> Starting development environment without build"
-        docker-compose up -d
+        docker-compose up
     fi
     echo "--> Done"
 elif [ "$1" == "--production" ]; then

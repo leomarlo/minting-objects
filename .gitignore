@@ -46,14 +46,18 @@ docker-copies
 /backend/dist/
 /backend/build/
 /backend/.venv/
+/backend/test.py
 *__pycache__*
+*node_modules*
+
 
 # Backend misc
 /backend/.env
 /backend/env/
 /backend/.flaskenv
 /backend/instance/
-
+/backend/thumbs
+/backend/uploads
 
 # global
 .env

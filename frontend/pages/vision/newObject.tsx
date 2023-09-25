@@ -9,8 +9,9 @@ import LoadingSpinner from "../../components/LoadingSpinner"
 import FileUploadComponent from "../../components/fileUpload"
 import createObjectWithReferenceImages from "../../utils/createObjectWithRefImages"
 // import Web3ModalComponent from "../../components/web3connect"
-import { Web3ModalCustomized } from "../../components/web3connect"
-import ControlledCheckbox from "../../components/checkBox"
+import { useWeb3Modal } from '../../contexts/web3Context';
+import ControlledCheckbox from "../../components/checkBox";
+import PasswordInput from "../../components/passwordInput"
 
 function ObjectCreation() {
   const [objectSets, setObjectSets] = useState([]);
@@ -25,15 +26,17 @@ function ObjectCreation() {
   const [upLoadDisabled, setUpLoadDisabled] = useState(true)
   const [disableSubmit, setDisableSubmit] = useState(true)
   const [validFiles, setValidFiles] = useState<Array<string>>([])
-  const [selectedObjectSet, setSelectedObjectSet] = useState('');
+  const [selectedObjectSet, setSelectedObjectSet] = useState(PRODUCT_IDS[0]);
   const [useCustodialWallet, setUseCustodialWallet] = useState(false);
   const toggleWeb3Modal = (checked: boolean) => {
     setUseCustodialWallet(checked);
   };
-  const [ethAccount, setEthAccount] = useState<null | string>(null);
   const [custodialPassword, setCustodialPassword] = useState<string>("");
 
   const fileInputRef = useRef<HTMLInputElement | null>(null);
+
+
+  const { web3, connect, disconnect , account} = useWeb3Modal();
 
   const handleDeleteSelectedFile = () => {
       setSelectedFile(null);
@@ -43,6 +46,7 @@ function ObjectCreation() {
   };
 
   const handleSelectChange = (event: any) => {
+    console.log('selected object set is', event.target.value)
     setSelectedObjectSet(event.target.value);
   };
 
@@ -81,6 +85,7 @@ function ObjectCreation() {
 
   const handleUpload = () => {
     setIsLoading(true)
+    console.log('selected Object Set is', selectedObjectSet)
     const formData = new FormData();
     if (selectedFile){
       formData.append('file', selectedFile);
@@ -165,9 +170,17 @@ function ObjectCreation() {
               className="form-control" 
               value={selectedObjectSet} 
               onChange={handleSelectChange}
+              defaultValue={PRODUCT_IDS[0]}
               style={{
                 backgroundColor: '#e4ea90',
-                borderWidth: '2px'
+                borderWidth: '2px',
+                borderRadius: '4px',
+                padding: '8px 12px',
+                appearance: 'none',  // Remove default appearance
+                backgroundImage: 'url("data:image/svg+xml;utf8,<svg fill=\'%23000\' viewBox=\'0 0 24 24\' width=\'24\' height=\'24\' xmlns=\'http://www.w3.org/2000/svg\'><path d=\'M7 10l5 5 5-5z\'/></svg>")',
+                backgroundRepeat: 'no-repeat',
+                backgroundPosition: 'right 8px center',
+                backgroundSize: '16px 16px'
               }}>
               {objectSets.map((set: any) =>
                 <option key={set} value={set} disabled={!PRODUCT_IDS.includes(set)}>
@@ -259,7 +272,7 @@ function ObjectCreation() {
             {/* <br />
             <Web3ModalComponent /> */}
             <br />
-            {submitInfo + (ethAccount ? ` Connected to ${ethAccount}.` : "")}
+            {submitInfo + (account ? ` Connected to ${account}.` : "")}
             <br />
             {useCustodialWallet ? 
               <div>
@@ -271,9 +284,19 @@ function ObjectCreation() {
                   }
                 }}>Mint object to custodial wallet</button>
                 <br />
-                <input className="my-2 w-100" placeholder="password" value={custodialPassword} onChange={(e) => setCustodialPassword(e.target.value)} />
+                <PasswordInput 
+                  classNames="" 
+                  password={custodialPassword} 
+                  setPassword={setCustodialPassword} />
+                
               </div> :
-              <Web3ModalCustomized buttonText='Mint object to my wallet' classNames={'btn btn-success w-100'} callbackFunction={handleSubmit} setterOfEthAccount={setEthAccount} /> 
+              <button 
+                className='btn btn-success w-100' 
+                onClick={(e)=> {
+                  connect();
+                  // handleSubmit()
+                }}
+                >Mint object to my wallet</button> 
             }
             
             
@@ -287,5 +310,7 @@ function ObjectCreation() {
     </div>
   );
 }
+
+
 
 export default ObjectCreation;

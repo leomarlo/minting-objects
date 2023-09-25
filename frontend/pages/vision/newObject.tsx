@@ -8,7 +8,9 @@ import LoadingSpinner from "../../components/LoadingSpinner"
 // import TablePrimitive  from "../../components/table"
 import FileUploadComponent from "../../components/fileUpload"
 import createObjectWithReferenceImages from "../../utils/createObjectWithRefImages"
-
+// import Web3ModalComponent from "../../components/web3connect"
+import { Web3ModalCustomized } from "../../components/web3connect"
+import ControlledCheckbox from "../../components/checkBox"
 
 function ObjectCreation() {
   const [objectSets, setObjectSets] = useState([]);
@@ -24,6 +26,12 @@ function ObjectCreation() {
   const [disableSubmit, setDisableSubmit] = useState(true)
   const [validFiles, setValidFiles] = useState<Array<string>>([])
   const [selectedObjectSet, setSelectedObjectSet] = useState('');
+  const [useCustodialWallet, setUseCustodialWallet] = useState(false);
+  const toggleWeb3Modal = (checked: boolean) => {
+    setUseCustodialWallet(checked);
+  };
+  const [ethAccount, setEthAccount] = useState<null | string>(null);
+  const [custodialPassword, setCustodialPassword] = useState<string>("");
 
   const fileInputRef = useRef<HTMLInputElement | null>(null);
 
@@ -70,6 +78,7 @@ function ObjectCreation() {
     });
   }, []);
 
+
   const handleUpload = () => {
     setIsLoading(true)
     const formData = new FormData();
@@ -98,6 +107,13 @@ function ObjectCreation() {
       });
   };
 
+  const checkPasswordFormat = (pw: string) => {
+    if (pw.length>0) {
+      return true
+    }
+    return false
+  }
+
 
   const handleAddObject = () => {
     // set the uploaded file as valid
@@ -110,11 +126,12 @@ function ObjectCreation() {
     setTableData([]);
 
   }
+
+  
   
   const handleSubmit = () => {
     setIsMinting(true)
     console.log('the submitted files are', validFiles)
-
     createObjectWithReferenceImages(validFiles, selectedObjectSet, objectDisplayName, objectName)
     .then(data => {
       // Do something with the data
@@ -162,6 +179,9 @@ function ObjectCreation() {
             <h4>Upload Reference Images</h4>
             <div className="row mt-3">
               <div className="col-4">
+                <button className="btn btn-success w-100" onClick={handleUpload}>Check</button>
+              </div>
+              <div className="col-4">
               <FileUploadComponent 
                   selectedFile={selectedFile} 
                   setSelectedFile={setSelectedFile}
@@ -175,8 +195,6 @@ function ObjectCreation() {
                   </div>
               )}
               </div>
-              <div className="col-4">
-              <button className="btn btn-success w-100" onClick={handleUpload}>Check</button></div>
             </div>
             <br />
             {isLoading && <LoadingSpinner />}
@@ -237,9 +255,29 @@ function ObjectCreation() {
               </div>
             </div>
             <hr />
-            {submitInfo}
+            <ControlledCheckbox isChecked={useCustodialWallet} onChange={toggleWeb3Modal} /> Use custodial wallet.
+            {/* <br />
+            <Web3ModalComponent /> */}
             <br />
-            <button className="btn btn-primary w-100" onClick={handleSubmit}disabled={disableSubmit}>Mint Object</button>
+            {submitInfo + (ethAccount ? ` Connected to ${ethAccount}.` : "")}
+            <br />
+            {useCustodialWallet ? 
+              <div>
+                <button className='btn btn-success w-100' onClick={(e)=>{
+                  if (checkPasswordFormat(custodialPassword)) {
+                    handleSubmit()
+                  } else {
+                    throw "Password invalid"
+                  }
+                }}>Mint object to custodial wallet</button>
+                <br />
+                <input className="my-2 w-100" placeholder="password" value={custodialPassword} onChange={(e) => setCustodialPassword(e.target.value)} />
+              </div> :
+              <Web3ModalCustomized buttonText='Mint object to my wallet' classNames={'btn btn-success w-100'} callbackFunction={handleSubmit} setterOfEthAccount={setEthAccount} /> 
+            }
+            
+            
+            {/* <button className="btn btn-primary w-100" onClick={handleSubmit}disabled={disableSubmit}>Mint Object</button> */}
             <br />
             {isMinting && <LoadingSpinner />}
           </div>

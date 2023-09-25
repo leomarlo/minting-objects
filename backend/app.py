@@ -39,7 +39,7 @@ from vision.similarity import search_products
 from vision.compression import compress_image
 from vision.ipfs import upload_image_to_ipfs
 
-from blockchain.minting import mint_token
+from blockchain.minting import mint_token, mint_nft_primitive
 
 
 
@@ -206,6 +206,7 @@ def create_product_and_add_to_product_set_route():
         return response_dict, status
 
 
+
 @app.route('/vision/removeProductFromProductSet', methods=['POST'])
 def remove_product_from_product_set_route():
     product_id = request.json['product_id']
@@ -308,6 +309,12 @@ def create_product_and_ref_images():
 def upload_to_ipfs_route():
     resp, status = upload_image_to_ipfs('img/carrot2.jpg')
     return jsonify(resp), status
+
+
+@app.route('/blockchain/blood/mint', methods=['GET'])
+def blood_minting_route():
+    cid="halloooo"
+    mint_nft_primitive(cid, contract_name="BLOOD")
 
 
 @app.route('/createTables', methods=['GET'])
